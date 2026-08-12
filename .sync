@@ -1,0 +1,10 @@
+# Deploys to [ox]/ox_lib, replacing the upstream release copy that ghst_sv used to
+# track. ghst_sv gitignores this path now -- the source of truth is Ghst-dev/ox_lib.
+category=[ox]
+
+# Match what an upstream release ships: no NUI source, no vite public dir, no patch
+# files, and not the npm types package. web/build is produced by the build step.
+exclude=web/src
+exclude=web/public
+exclude=patches
+exclude=package
