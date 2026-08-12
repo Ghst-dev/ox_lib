@@ -1,0 +1,23 @@
+# pnpm 11 no longer reads the "pnpm" field in package.json, so its settings live here.
+#
+# The patch adds the center-left / center-right toast positions that ox_lib's notify
+# API exposes (see resource/settings.lua). package.json keeps bun's root-level
+# patchedDependencies, so bun and pnpm both apply it. react-hot-toast is pinned to an
+# exact 2.5.2 in package.json because the patch targets that version -- with the
+# original ^2.5.2, pnpm resolves 2.6.0 and the patch is rejected as unused.
+patchedDependencies:
+  react-hot-toast@2.5.2: patches/react-hot-toast@2.5.2.patch
+
+# pnpm blocks dependency build scripts by default. esbuild needs its postinstall to
+# link its platform binary, without which vite cannot build.
+onlyBuiltDependencies:
+  - esbuild
+
+allowBuilds:
+  esbuild: set this to true or false
+
+# `pnpm run` re-runs `pnpm install` as a pre-flight check, which exits 1 on the
+# ignored-builds warning above and kills the script before it starts. esbuild's
+# postinstall is not actually needed here -- on Windows the @esbuild/win32-x64
+# package ships esbuild.exe directly -- so skip the check.
+verifyDepsBeforeRun: false
