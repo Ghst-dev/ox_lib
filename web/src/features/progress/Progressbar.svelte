@@ -75,12 +75,22 @@
     overflow: hidden;
   }
 
+  /*
+   * --color-action, not --color-primary: the palette reserves it for live moments and
+   * names fill animations as the example. A bar filling is the canonical one.
+   *
+   * The fill is mixed onto the panel's own surface rather than into `transparent`.
+   * Mixing into transparent yields 22% alpha, which over an already-translucent panel
+   * washed out to the point that only the leading edge read as anything — the bar
+   * looked broken rather than subtle.
+   */
   .bar {
     position: absolute;
     inset: 0;
     width: 0;
-    background: color-mix(in srgb, var(--color-primary) 22%, transparent);
-    border-right: 1px solid var(--color-primary);
+    background: color-mix(in srgb, var(--color-action) 26%, var(--surface-panel));
+    border-right: 2px solid var(--color-action);
+    box-shadow: 0 0 8px var(--action-glow);
     overflow: hidden;
     animation: progress-fill linear forwards;
   }

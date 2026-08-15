@@ -123,9 +123,11 @@
     stroke-width: 7;
   }
 
+  /* --color-action for the same reason as Progressbar's fill: this is a live moment,
+     not chrome at rest. The track behind it stays a neutral surface colour. */
   .value {
     fill: none;
-    stroke: var(--color-primary);
+    stroke: var(--color-action);
     stroke-width: 7;
     stroke-linecap: round;
     animation: ring-fill linear forwards;
