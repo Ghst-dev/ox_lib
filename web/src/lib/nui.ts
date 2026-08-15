@@ -7,6 +7,8 @@
  * hazard in this rewrite.
  */
 
+import { nuiMocks } from './mocks';
+
 // Capture the real fetch before it is taken away below.
 const realFetch = window.fetch;
 
@@ -40,8 +42,11 @@ const resourceName = (): string =>
  */
 export async function fetchNui<T = any>(eventName: string, data?: unknown): Promise<T> {
   if (isEnvBrowser()) {
-    console.debug(`[nui] fetchNui("${eventName}") skipped — not running in CEF`, data);
-    return undefined as T;
+    const mock = nuiMocks[eventName];
+    const value = typeof mock === 'function' ? mock(data) : mock;
+
+    console.debug(`[nui] fetchNui("${eventName}") skipped — not running in CEF`, data, '->', value);
+    return value as T;
   }
 
   const resp = await realFetch(`https://${resourceName()}/${eventName}`, {

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { onNuiEvent } from './lib/nui';
+  import { onNuiEvent, isEnvBrowser } from './lib/nui';
   import { initShell } from './lib/stores.svelte';
   import { setClipboard } from './utils/setClipboard';
 
@@ -14,6 +14,7 @@
   import ListMenu from './features/menu/list/ListMenu.svelte';
   import RadialMenu from './features/menu/radial/RadialMenu.svelte';
   import SkillCheck from './features/skillcheck/SkillCheck.svelte';
+  import DevPanel from './features/dev/DevPanel.svelte';
 
   // Every feature mounts unconditionally and decides for itself whether it is visible,
   // exactly as App.tsx did — each one is driven by its own NUI action.
@@ -39,7 +40,6 @@
 <RadialMenu />
 <SkillCheck />
 
-<!--
-  Still to mount:
-    Phase 5  Dev panel (browser only)
--->
+{#if isEnvBrowser()}
+  <DevPanel />
+{/if}
