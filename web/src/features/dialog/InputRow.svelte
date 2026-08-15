@@ -1,6 +1,8 @@
 <script lang="ts">
   import Icon from '../../lib/Icon.svelte';
-  import { toDateInput, fromDateInput, toTimeInput, fromTimeInput } from './datetime';
+  import ColorField from './ColorField.svelte';
+  import DateField from './DateField.svelte';
+  import { toTimeInput, fromTimeInput } from './datetime';
 
   /**
    * One row of an input dialog. Mantine supplied rich controls for the last four types;
@@ -37,15 +39,22 @@
 
   let revealPassword = $state(false);
 
-  // date-range carries two timestamps; keep them addressable without losing the pair.
-  const rangeStart = $derived(Array.isArray(value) ? value[0] : null);
-  const rangeEnd = $derived(Array.isArray(value) ? value[1] : null);
+  // `precision` is Mantine's decimal-places option; with no explicit step it implies one.
+  const numberStep = $derived(row.step ?? (row.precision ? 1 / 10 ** row.precision : 1));
 
-  function setRange(index: 0 | 1, input: string) {
-    const next: (number | null)[] = Array.isArray(value) ? [...value] : [null, null];
-    next[index] = fromDateInput(input);
-    value = next;
+  function step(direction: 1 | -1) {
+    const next = (Number(value) || 0) + numberStep * direction;
+    const clamped = Math.min(
+      Math.max(next, row.min ?? -Infinity),
+      row.max ?? Infinity,
+    );
+
+    // Floating-point steps accumulate error (0.1 + 0.2), so the result is rounded back to
+    // the precision the step implies.
+    const decimals = row.precision ?? (String(numberStep).split('.')[1]?.length ?? 0);
+    value = Number(clamped.toFixed(decimals));
   }
+
 </script>
 
 <div class="field" class:invalid>
@@ -113,17 +122,30 @@
       {/each}
     </select>
   {:else if row.type === 'number'}
-    <input
-      id="row-{row.label}"
-      class="control"
-      type="number"
-      bind:value
-      min={row.min}
-      max={row.max}
-      step={row.step ?? (row.precision ? 1 / 10 ** row.precision : undefined)}
-      placeholder={row.placeholder}
-      disabled={row.disabled}
-    />
+    <!-- Chromium's native spinners cannot be themed — they are a shadow-DOM control that
+         ignores everything but width, and they render as a light-mode artefact against a
+         dark panel. Hidden below, with themed steppers in their place. -->
+    <div class="number-field">
+      <input
+        id="row-{row.label}"
+        class="control"
+        type="number"
+        bind:value
+        min={row.min}
+        max={row.max}
+        step={numberStep}
+        placeholder={row.placeholder}
+        disabled={row.disabled}
+      />
+      <div class="steppers">
+        <button type="button" disabled={row.disabled} onclick={() => step(1)} aria-label="Increment">
+          <Icon icon="chevron-up" size="9px" />
+        </button>
+        <button type="button" disabled={row.disabled} onclick={() => step(-1)} aria-label="Decrement">
+          <Icon icon="chevron-down" size="9px" />
+        </button>
+      </div>
+    </div>
   {:else if row.type === 'slider'}
     <div class="slider-row">
       <span class="bound">{row.min ?? 0}</span>
@@ -141,45 +163,18 @@
       <span class="slider-value">{value}</span>
     </div>
   {:else if row.type === 'color'}
-    <!-- Native colour input is hex-only. `format` (rgb/hsl/alpha variants) is not
-         honoured; the value is always #rrggbb. -->
-    <input
+    <ColorField id="row-{row.label}" bind:value format={row.format} disabled={row.disabled} />
+  {:else if row.type === 'date' || row.type === 'date-range'}
+    <DateField
       id="row-{row.label}"
-      class="control color"
-      type="color"
       bind:value
+      range={row.type === 'date-range'}
+      format={row.format ?? 'DD/MM/YYYY'}
+      min={row.min}
+      max={row.max}
+      clearable={row.clearable}
       disabled={row.disabled}
     />
-  {:else if row.type === 'date'}
-    <input
-      id="row-{row.label}"
-      class="control"
-      type="date"
-      value={toDateInput(value)}
-      min={row.min ? toDateInput(new Date(row.min).getTime()) : undefined}
-      max={row.max ? toDateInput(new Date(row.max).getTime()) : undefined}
-      disabled={row.disabled}
-      onchange={(e) => (value = fromDateInput(e.currentTarget.value))}
-    />
-  {:else if row.type === 'date-range'}
-    <!-- No native range picker exists, so this is two date inputs over one value pair. -->
-    <div class="range-row">
-      <input
-        class="control"
-        type="date"
-        value={toDateInput(rangeStart)}
-        disabled={row.disabled}
-        onchange={(e) => setRange(0, e.currentTarget.value)}
-      />
-      <span class="dash">–</span>
-      <input
-        class="control"
-        type="date"
-        value={toDateInput(rangeEnd)}
-        disabled={row.disabled}
-        onchange={(e) => setRange(1, e.currentTarget.value)}
-      />
-    </div>
   {:else if row.type === 'time'}
     <!-- `format: '12'` is not honoured: the native control follows the OS locale. -->
     <input
@@ -270,14 +265,62 @@
     min-height: 96px;
   }
 
+  /* Number field: native spinners removed, themed steppers overlaid. */
+  .number-field {
+    position: relative;
+  }
+
+  .number-field .control {
+    padding-right: 30px;
+    appearance: textfield;
+  }
+
+  .number-field .control::-webkit-outer-spin-button,
+  .number-field .control::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+
+  .steppers {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    bottom: 1px;
+    display: flex;
+    flex-direction: column;
+    width: 22px;
+    border-left: 1px solid var(--color-border);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    overflow: hidden;
+  }
+
+  .steppers button {
+    display: grid;
+    place-items: center;
+    flex: 1;
+    background: var(--color-surface-2);
+    color: var(--color-gray);
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+
+  .steppers button:hover:not(:disabled) {
+    background: var(--primary-glow);
+    color: var(--color-primary);
+  }
+
+  .steppers button:first-child {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .steppers button:disabled {
+    opacity: 0.5;
+  }
+
   .area {
     resize: vertical;
     font-family: inherit;
-  }
-
-  .color {
-    height: 36px;
-    padding: 4px;
   }
 
   .checkbox {
@@ -311,12 +354,4 @@
     color: var(--color-primary);
   }
 
-  .range-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .dash {
-    color: var(--color-dim);
-  }
 </style>
