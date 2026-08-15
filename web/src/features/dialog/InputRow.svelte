@@ -305,9 +305,10 @@
       color var(--dur-fast) var(--ease-out);
   }
 
-  /* Tint over the button's own surface — see the note on --primary-glow in tokens.css. */
+  /* One neutral step up from the button's own --color-surface-2, with the accent carried
+     by the glyph rather than the fill. See the hover note in tokens.css. */
   .steppers button:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface-2));
+    background: var(--color-border);
     color: var(--color-primary);
   }
 

@@ -182,12 +182,18 @@
       background var(--dur-fast) var(--ease-out);
   }
 
-  /* Composited over the option's own surface, not substituted for it. --primary-glow is
-     an 8%-alpha tint; assigning it to `background` throws away the 92%-opaque panel
-     underneath and the game shows through the row you are pointing at. */
+  /*
+   * Hover lifts the surface a step and accents the edge. No hue in the fill.
+   *
+   * A tinted fill made the hovered row look like a different material from the rows
+   * around it rather than the same one highlighted, which is out of step with the rest
+   * of the system — HeaderButton, DateField, the calendar days and every hover in
+   * ox_inventory all keep a neutral surface and move the border and text instead.
+   */
   .option:hover:not(.disabled):not(.read-only) {
+    background: var(--color-surface-2);
     border-color: var(--primary-glow-border);
-    background: color-mix(in srgb, var(--color-primary) 12%, var(--surface-panel));
+    color: var(--color-white);
   }
 
   .option.disabled {
