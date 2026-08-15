@@ -1,6 +1,4 @@
-import { IconProp } from '@fortawesome/fontawesome-svg-core';
-import React from 'react';
-import { IconAnimation } from '../components/LibIcon';
+import type { IconProp, IconAnimation, StyleObject } from '../lib/icon';
 
 export type TextUiPosition = 'right-center' | 'left-center' | 'top-center' | 'bottom-center';
 
@@ -10,6 +8,6 @@ export interface TextUiProps {
   icon?: IconProp;
   iconColor?: string;
   iconAnimation?: IconAnimation;
-  style?: React.CSSProperties;
+  style?: StyleObject;
   alignIcon?: 'top' | 'center';
 }

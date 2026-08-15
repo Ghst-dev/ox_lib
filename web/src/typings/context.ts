@@ -1,5 +1,4 @@
-import { IconProp } from '@fortawesome/fontawesome-svg-core';
-import { IconAnimation } from '../components/LibIcon';
+import type { IconProp, IconAnimation } from '../lib/icon';
 
 export interface Option {
   menu?: string;
