@@ -4,9 +4,13 @@
   import { initShell } from './lib/stores.svelte';
   import { setClipboard } from './utils/setClipboard';
 
-  // Feature components mount here as each phase lands. The React App.tsx rendered all
-  // nine unconditionally and let each one decide whether it was visible; same approach,
-  // since every feature is driven by its own NUI action.
+  import Notifications from './features/notifications/Notifications.svelte';
+  import TextUI from './features/textui/TextUI.svelte';
+  import Progressbar from './features/progress/Progressbar.svelte';
+  import CircleProgressbar from './features/progress/CircleProgressbar.svelte';
+
+  // Every feature mounts unconditionally and decides for itself whether it is visible,
+  // exactly as App.tsx did — each one is driven by its own NUI action.
   onMount(() => {
     const offShell = initShell();
     const offClipboard = onNuiEvent<string>('setClipboard', setClipboard);
@@ -18,9 +22,13 @@
   });
 </script>
 
+<Progressbar />
+<CircleProgressbar />
+<Notifications />
+<TextUI />
+
 <!--
-  Phase 0: shell only. Still to mount, in order:
-    Phase 1  Notifications, TextUI, Progressbar, CircleProgressbar
+  Still to mount:
     Phase 2  AlertDialog, ContextMenu, InputDialog
     Phase 3  ListMenu, RadialMenu
     Phase 4  SkillCheck
