@@ -180,9 +180,11 @@
     transform: translateY(0);
   }
 
-  /* Only highlighted when there is a cancel button to distinguish it from. */
+  /* Only highlighted when there is a cancel button to distinguish it from. The tint is
+     composited over .btn's surface rather than replacing it — replacing left the
+     confirm button more transparent than the cancel beside it. */
   .btn.primary {
-    background: var(--primary-glow);
+    background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface-2));
     border-color: var(--primary-glow-border);
     color: var(--color-primary);
   }

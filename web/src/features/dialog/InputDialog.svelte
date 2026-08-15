@@ -229,8 +229,9 @@
     opacity: 0.4;
   }
 
+  /* Composited over .btn's surface, not substituted for it — see tokens.css. */
   .btn.primary {
-    background: var(--primary-glow);
+    background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface-2));
     border-color: var(--primary-glow-border);
     color: var(--color-primary);
   }

@@ -305,8 +305,9 @@
       color var(--dur-fast) var(--ease-out);
   }
 
+  /* Tint over the button's own surface — see the note on --primary-glow in tokens.css. */
   .steppers button:hover:not(:disabled) {
-    background: var(--primary-glow);
+    background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface-2));
     color: var(--color-primary);
   }
 

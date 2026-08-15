@@ -182,9 +182,12 @@
       background var(--dur-fast) var(--ease-out);
   }
 
+  /* Composited over the option's own surface, not substituted for it. --primary-glow is
+     an 8%-alpha tint; assigning it to `background` throws away the 92%-opaque panel
+     underneath and the game shows through the row you are pointing at. */
   .option:hover:not(.disabled):not(.read-only) {
     border-color: var(--primary-glow-border);
-    background: var(--primary-glow);
+    background: color-mix(in srgb, var(--color-primary) 12%, var(--surface-panel));
   }
 
   .option.disabled {
