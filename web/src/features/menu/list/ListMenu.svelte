@@ -260,14 +260,16 @@
     color: var(--color-white);
   }
 
+  /* A recess for the rows to sit in: darker and more opaque than the panel above it, so
+     the lighter rows read as raised. */
   .items {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    max-height: 415px;
-    padding: 8px;
+    gap: 10px;
+    max-height: 430px;
+    padding: 12px;
     overflow-y: auto;
-    background: var(--surface-sunken);
+    background: color-mix(in srgb, var(--color-bg) 90%, transparent);
     border: 1px solid var(--color-border);
     border-top: none;
     border-radius: 0 0 var(--radius-md) var(--radius-md);

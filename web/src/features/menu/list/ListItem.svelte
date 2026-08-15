@@ -74,23 +74,30 @@
 </div>
 
 <style>
+  /* Rows sit on a recessed container, so they are a step *lighter* than it plus a hairline
+     border. At --color-surface (#111) on a #0a0a0a ground they were nearly invisible —
+     the list read as one dark slab rather than a set of rows. */
   .row {
     display: flex;
     align-items: center;
-    gap: 15px;
-    height: 60px;
-    padding: 0 12px 0 5px;
-    background: var(--color-surface);
-    border: 1px solid transparent;
+    gap: 14px;
+    min-height: 58px;
+    padding: 10px 14px;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    scroll-margin: 8px;
+    scroll-margin: 10px;
     outline: none;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
   }
 
-  /* The selected row is the only affordance here — the menu is keyboard-driven, so it
-     has to be unmistakable. */
+  /* The selected row is the only affordance here — the menu is keyboard-driven, so it has
+     to be unmistakable. Mixed into the surface rather than layered as a translucent glow,
+     which over a dark ground barely shifted the colour at all. */
   .row.active {
-    background: var(--primary-glow);
+    background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface-2));
     border-color: var(--primary-glow-border);
   }
 
@@ -113,15 +120,17 @@
   }
 
   .sublabel {
-    margin: 0;
-    color: var(--color-gray);
+    margin: 0 0 3px;
+    color: var(--color-dim);
     text-transform: uppercase;
     font-size: var(--text-label);
     letter-spacing: var(--tracking-label);
+    line-height: 1.2;
   }
 
   .value {
     margin: 0;
+    line-height: 1.2;
   }
 
   .scroller {
@@ -153,11 +162,12 @@
   }
 
   .progress-label {
-    margin: 0 0 3px;
+    margin: 0 0 6px;
+    line-height: 1.2;
   }
 
   .bar {
-    height: 8px;
+    height: 6px;
     border-radius: var(--radius-full);
     background: var(--color-surface-2);
     overflow: hidden;
