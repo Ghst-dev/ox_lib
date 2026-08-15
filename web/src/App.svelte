@@ -8,6 +8,9 @@
   import TextUI from './features/textui/TextUI.svelte';
   import Progressbar from './features/progress/Progressbar.svelte';
   import CircleProgressbar from './features/progress/CircleProgressbar.svelte';
+  import AlertDialog from './features/dialog/AlertDialog.svelte';
+  import InputDialog from './features/dialog/InputDialog.svelte';
+  import ContextMenu from './features/menu/context/ContextMenu.svelte';
 
   // Every feature mounts unconditionally and decides for itself whether it is visible,
   // exactly as App.tsx did — each one is driven by its own NUI action.
@@ -26,10 +29,12 @@
 <CircleProgressbar />
 <Notifications />
 <TextUI />
+<AlertDialog />
+<InputDialog />
+<ContextMenu />
 
 <!--
   Still to mount:
-    Phase 2  AlertDialog, ContextMenu, InputDialog
     Phase 3  ListMenu, RadialMenu
     Phase 4  SkillCheck
     Phase 5  Dev panel (browser only)
