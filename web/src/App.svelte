@@ -13,6 +13,7 @@
   import ContextMenu from './features/menu/context/ContextMenu.svelte';
   import ListMenu from './features/menu/list/ListMenu.svelte';
   import RadialMenu from './features/menu/radial/RadialMenu.svelte';
+  import SkillCheck from './features/skillcheck/SkillCheck.svelte';
 
   // Every feature mounts unconditionally and decides for itself whether it is visible,
   // exactly as App.tsx did — each one is driven by its own NUI action.
@@ -36,9 +37,9 @@
 <ContextMenu />
 <ListMenu />
 <RadialMenu />
+<SkillCheck />
 
 <!--
   Still to mount:
-    Phase 4  SkillCheck
     Phase 5  Dev panel (browser only)
 -->
