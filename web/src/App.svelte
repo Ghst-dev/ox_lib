@@ -11,6 +11,8 @@
   import AlertDialog from './features/dialog/AlertDialog.svelte';
   import InputDialog from './features/dialog/InputDialog.svelte';
   import ContextMenu from './features/menu/context/ContextMenu.svelte';
+  import ListMenu from './features/menu/list/ListMenu.svelte';
+  import RadialMenu from './features/menu/radial/RadialMenu.svelte';
 
   // Every feature mounts unconditionally and decides for itself whether it is visible,
   // exactly as App.tsx did — each one is driven by its own NUI action.
@@ -32,10 +34,11 @@
 <AlertDialog />
 <InputDialog />
 <ContextMenu />
+<ListMenu />
+<RadialMenu />
 
 <!--
   Still to mount:
-    Phase 3  ListMenu, RadialMenu
     Phase 4  SkillCheck
     Phase 5  Dev panel (browser only)
 -->
