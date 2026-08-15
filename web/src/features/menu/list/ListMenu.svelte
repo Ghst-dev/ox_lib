@@ -187,7 +187,7 @@
 <svelte:window onkeydown={onKey} />
 
 {#if visible}
-  <div class="container {menu.position ?? 'top-left'}">
+  <div class="list-menu {menu.position ?? 'top-left'}">
     <div class="header">{menu.title}</div>
 
     <div class="items" role="listbox" tabindex="-1" aria-label={menu.title}>
@@ -217,7 +217,7 @@
 {/if}
 
 <style>
-  .container {
+  .list-menu {
     position: absolute;
     width: 384px;
     pointer-events: auto;

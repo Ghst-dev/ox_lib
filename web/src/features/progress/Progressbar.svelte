@@ -37,7 +37,7 @@
 <div class="wrapper">
   {#if visible}
     <div
-      class="container"
+      class="frame"
       in:scaleFade
       out:scaleFadeOut
       onoutroend={() => fetchNui('progressComplete')}
@@ -64,7 +64,7 @@
     pointer-events: none;
   }
 
-  .container {
+  .frame {
     position: relative;
     width: 350px;
     height: 45px;

@@ -3,6 +3,7 @@
   import { onNuiEvent } from '../../lib/nui';
   import { renderMarkdown } from '../../lib/markdown';
   import { notificationIn, notificationOut } from '../../lib/transitions';
+  import { inlineStyle } from '../../lib/style';
   import Icon from '../../lib/Icon.svelte';
   import type { NotificationProps } from '../../typings';
 
@@ -142,9 +143,7 @@
       {#each stack as item (item.key)}
         <div
           class="toast"
-          style={Object.entries(item.data.style ?? {})
-            .map(([k, v]) => `${k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}:${v}`)
-            .join(';')}
+          style={inlineStyle(item.data.style)}
           in:notificationIn={{ position }}
           out:notificationOut={{ position }}
         >
@@ -156,10 +155,10 @@
             >
               {#if item.showDuration}
                 {#key item.ringSeq}
-                  <svg class="ring" width="38" height="38" viewBox="0 0 38 38">
-                    <circle class="ring-track" cx="19" cy="19" r="17" />
+                  <svg class="countdown" width="38" height="38" viewBox="0 0 38 38">
+                    <circle class="countdown-track" cx="19" cy="19" r="17" />
                     <circle
-                      class="ring-value"
+                      class="countdown-value"
                       cx="19"
                       cy="19"
                       r="17"
@@ -271,17 +270,17 @@
     align-self: flex-start;
   }
 
-  .ring {
+  .countdown {
     position: absolute;
     inset: 0;
     transform: rotate(-90deg);
   }
-  .ring-track {
+  .countdown-track {
     fill: none;
     stroke: var(--color-surface-2);
     stroke-width: 2;
   }
-  .ring-value {
+  .countdown-value {
     fill: none;
     stroke: var(--ring-color);
     stroke-width: 2;

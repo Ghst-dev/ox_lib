@@ -65,7 +65,7 @@
       out:scaleFadeOut
       onoutroend={() => fetchNui('progressComplete')}
     >
-      <svg class="ring" width="90" height="90" viewBox="0 0 90 90">
+      <svg class="dial" width="90" height="90" viewBox="0 0 90 90">
         <circle class="track" cx="45" cy="45" r={R} />
         <circle
           class="value"
@@ -112,7 +112,7 @@
     gap: 4px;
   }
 
-  .ring {
+  .dial {
     /* Start the sweep at 12 o'clock rather than 3. */
     transform: rotate(-90deg);
   }

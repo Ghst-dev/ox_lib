@@ -16,6 +16,20 @@
 @source './';
 
 /*
+ * CAUTION — component class names share a namespace with Tailwind's utilities.
+ *
+ * `@source` scans these files, so writing class="ring" or class="container" makes
+ * Tailwind *generate* its own `.ring` / `.container` utility, which then applies to the
+ * element alongside the component's scoped styles. Both were shipped by accident:
+ * `.ring` painted a 1px white box-shadow around the notification and progress dials, and
+ * `.container` gave the text UI `width: 100%` so it stretched across the screen.
+ *
+ * Svelte's scoping does not protect against this — it adds a hash class, it does not stop
+ * a global utility of the same name from matching. Avoid bare utility names: ring,
+ * container, grow, group, block, flex, fixed, absolute, hidden, static, table, contents.
+ */
+
+/*
  * Every ox_lib surface is an overlay on the game, and several of them (notifications,
  * text UI, progress) are non-interactive — they must never eat a click that belongs to
  * the game. #root spans the viewport, so it has to be transparent to pointer events;

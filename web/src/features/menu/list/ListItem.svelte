@@ -44,7 +44,7 @@
 
   {#if Array.isArray(item.values)}
     <!-- A scroll row: label above, current value below, with a position readout. -->
-    <div class="grow">
+    <div class="stretch">
       <p class="sublabel">{item.label}</p>
       <p class="value">{currentValue}</p>
     </div>
@@ -54,12 +54,12 @@
       <Icon icon="chevron-right" size="14px" />
     </div>
   {:else if item.checked !== undefined}
-    <span class="grow">{item.label}</span>
+    <span class="stretch">{item.label}</span>
     <span class="checkbox" class:checked aria-hidden="true">
       {#if checked}<Icon icon="check" size="12px" />{/if}
     </span>
   {:else if item.progress !== undefined}
-    <div class="grow">
+    <div class="stretch">
       <p class="progress-label">{item.label}</p>
       <div class="bar">
         <span
@@ -69,7 +69,7 @@
       </div>
     </div>
   {:else}
-    <span class="grow">{item.label}</span>
+    <span class="stretch">{item.label}</span>
   {/if}
 </div>
 
@@ -107,7 +107,7 @@
     max-width: 32px;
   }
 
-  .grow {
+  .stretch {
     flex: 1;
     min-width: 0;
   }

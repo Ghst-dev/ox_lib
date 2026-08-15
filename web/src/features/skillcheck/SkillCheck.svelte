@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { onNuiEvent, fetchNui } from '../../lib/nui';
   import type { GameDifficulty } from '../../typings';
 
@@ -145,73 +145,87 @@
     offCancel();
     stop();
   });
+
+  /**
+   * The wheel scales up on tall displays. This was a CSS media query setting `r`, `cx` and
+   * `cy` as CSS geometry properties — but those require units, and unitless values are
+   * silently invalid, which collapsed every circle to r=0 and rendered nothing but the key
+   * box. Driving the attributes from a matchMedia query keeps the numbers unitless where
+   * the arc maths needs them and avoids the CSS-geometry trap entirely.
+   */
+  let tall = $state(false);
+
+  onMount(() => {
+    const query = window.matchMedia('(min-height: 1440px)');
+    tall = query.matches;
+
+    const update = () => (tall = query.matches);
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  });
+
+  const R = $derived(tall ? 65 : 50);
+  const STROKE = $derived(tall ? 10 : 8);
+  const INDICATOR_STROKE = $derived(tall ? 18 : 16);
+  const INDICATOR_GAP = $derived(tall ? 5 : 3);
+  const DASH = $derived(2 * Math.PI * R);
+  /** Arc length of the hit window, in the same units as the dash array. */
+  const AREA_OFFSET = $derived(DASH - (Math.PI * R * offset) / 180);
 </script>
 
 <svelte:window onkeydown={onKeydown} />
 
 {#if visible}
-  <svg class="wheel" style:--sc-offset={offset}>
-    <circle class="track" />
-    <circle class="area" transform="rotate({angle}, 250, 250)" />
-    <circle class="indicator" transform="rotate({indicatorAngle}, 250, 250)" />
+  <svg class="wheel" width="500" height="500" viewBox="0 0 500 500">
+    <circle class="track" cx="250" cy="250" r={R} stroke-width={STROKE} stroke-dasharray={DASH} />
+    <circle
+      class="area"
+      cx="250"
+      cy="250"
+      r={R}
+      stroke-width={STROKE}
+      stroke-dasharray={DASH}
+      stroke-dashoffset={AREA_OFFSET}
+      transform="rotate({angle}, 250, 250)"
+    />
+    <circle
+      class="indicator"
+      cx="250"
+      cy="250"
+      r={R}
+      stroke-width={INDICATOR_STROKE}
+      stroke-dasharray={DASH}
+      stroke-dashoffset={DASH - INDICATOR_GAP}
+      transform="rotate({indicatorAngle}, 250, 250)"
+    />
   </svg>
-  <div class="key">{key.toUpperCase()}</div>
+  <div class="key" class:tall>{key.toUpperCase()}</div>
 {/if}
 
 <style>
-  /* Geometry lives in CSS so the 1440px breakpoint can scale the whole wheel by changing
-     two variables, exactly as the Mantine media query did. */
+  /* Geometry is set as SVG attributes, not CSS. `r`/`cx`/`cy` are CSS geometry properties
+     that require units; unitless values are invalid and silently collapse the circle. */
   .wheel {
-    --sc-r: 50;
-    --sc-dash: 314.1592653589793; /* 2 * pi * 50 */
-    --sc-stroke: 8;
-    --sc-indicator-stroke: 16;
-    --sc-indicator-gap: 3;
-
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 500px;
-    height: 500px;
-  }
-
-  @media (min-height: 1440px) {
-    .wheel {
-      --sc-r: 65;
-      --sc-dash: 408.4070449666731; /* 2 * pi * 65 */
-      --sc-stroke: 10;
-      --sc-indicator-stroke: 18;
-      --sc-indicator-gap: 5;
-    }
   }
 
   .wheel circle {
-    r: var(--sc-r);
-    cx: 250;
-    cy: 250;
     fill: transparent;
-    stroke-dasharray: var(--sc-dash);
   }
 
   .track {
     stroke: var(--color-surface-2);
-    stroke-width: var(--sc-stroke);
   }
 
-  /* Arc length for `offset` degrees at the current radius. */
   .area {
     stroke: var(--color-primary);
-    stroke-width: var(--sc-stroke);
-    stroke-dashoffset: calc(
-      var(--sc-dash) - (3.141592653589793 * var(--sc-r) * var(--sc-offset)) / 180
-    );
   }
 
   .indicator {
     stroke: var(--color-danger);
-    stroke-width: var(--sc-indicator-stroke);
-    stroke-dashoffset: calc(var(--sc-dash) - var(--sc-indicator-gap));
   }
 
   .key {
@@ -230,11 +244,9 @@
     color: var(--color-white);
   }
 
-  @media (min-height: 1440px) {
-    .key {
-      width: 30px;
-      height: 30px;
-      font-size: 22px;
-    }
+  .key.tall {
+    width: 30px;
+    height: 30px;
+    font-size: 22px;
   }
 </style>

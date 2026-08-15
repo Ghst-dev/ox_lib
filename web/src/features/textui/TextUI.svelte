@@ -3,6 +3,7 @@
   import { onNuiEvent } from '../../lib/nui';
   import { renderMarkdown } from '../../lib/markdown';
   import { scaleFade, scaleFadeOut } from '../../lib/transitions';
+  import { inlineStyle } from '../../lib/style';
   import Icon from '../../lib/Icon.svelte';
   import type { TextUiProps } from '../../typings';
 
@@ -23,16 +24,12 @@
     offHide();
   });
 
-  const inline = $derived(
-    Object.entries(data.style ?? {})
-      .map(([k, v]) => `${k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}:${v}`)
-      .join(';'),
-  );
+  const inline = $derived(inlineStyle(data.style));
 </script>
 
 <div class="wrapper {data.position ?? 'right-center'}">
   {#if visible}
-    <div class="container" style={inline} in:scaleFade out:scaleFadeOut>
+    <div class="panel" style={inline} in:scaleFade out:scaleFadeOut>
       {#if data.icon}
         <Icon
           icon={data.icon}
@@ -75,7 +72,7 @@
     justify-content: flex-start;
   }
 
-  .container {
+  .panel {
     display: flex;
     align-items: center;
     gap: 12px;

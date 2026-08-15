@@ -264,13 +264,13 @@
     stroke-width: 0;
   }
 
-  /* On hover the sector turns accent, so its contents flip to the dark base colour to
-     stay legible. */
-  .sector:hover text,
-  .sector:hover path {
-    fill: var(--color-bg);
-  }
+  /* On hover the wedge turns accent, so its contents flip to the dark base colour to stay
+     legible.
 
+     These must stay scoped to the inner group. A bare `.sector:hover path` also matches
+     the wedge itself — which is a direct child — so the sector painted itself near-black
+     instead of cyan and swallowed its own icon. */
+  .sector:hover > g > text,
   .sector:hover > g > svg > path {
     fill: var(--color-bg);
   }
@@ -280,9 +280,15 @@
     stroke: var(--color-surface);
     stroke-width: 4;
   }
+  /* A lighter primary, matching the React build's shade-1 hover. Not --color-action:
+     under the accent rule that is reserved for live events, and a hover is idle chrome.
+
+     This referenced --color-accent-deep, a token from the palette that preceded the
+     Ghostbase port. An unresolvable var() makes `fill` compute to its inherited value —
+     black — so the button went dark on hover instead of brightening. */
   .centre:hover {
     cursor: pointer;
-    fill: var(--color-accent-deep);
+    fill: color-mix(in srgb, var(--color-primary) 78%, white);
   }
 
   .centre-icon {
