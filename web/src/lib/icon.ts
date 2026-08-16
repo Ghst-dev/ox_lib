@@ -1,47 +1,53 @@
 /**
  * Icon and style types shared by the typings.
  *
- * These used to come from `components/LibIcon.tsx` (the React FontAwesome wrapper),
- * `@mantine/core` and `react`. The React bindings are gone, but the *types* are part of
- * ox_lib's public API — consumers pass `icon = 'car'` and `iconAnimation = 'spin'` from
- * Lua — so they are preserved here verbatim.
+ * These originally came from `components/LibIcon.tsx` (the React FontAwesome wrapper),
+ * `@mantine/core` and `react`. The React bindings went first; FontAwesome itself has now
+ * gone too, replaced by Lucide (see lib/icons.ts). The *types* remain part of ox_lib's
+ * public API — consumers pass `icon = 'car'` and `iconAnimation = 'spin'` from Lua — so
+ * they are preserved, with `IconProp` declared here rather than imported.
  */
 
-import { findIconDefinition, type IconProp } from '@fortawesome/fontawesome-svg-core';
+import { resolveIcon, type IconNode } from './icons';
 
-export type { IconProp };
+export type { IconNode };
 
 /**
- * Raw path data for an icon, for use *inside* an SVG.
+ * What Lua may send where an icon is expected.
+ *
+ * FontAwesome's own `IconProp` was a union of ~2000 string literals, which is the only
+ * reason the typings needed to import from it. Since the value is runtime data crossing
+ * the NUI boundary, that union never constrained anything a consumer could get wrong at
+ * compile time — it only coupled every typing file to the icon library.
+ *
+ * The shapes accepted are unchanged: a bare name, a `[prefix, name]` pair, or the
+ * `{ prefix, iconName }` table ox_lib documents. Class strings ('fa-solid fa-car') also
+ * arrive in practice and are handled by normaliseIconName.
+ */
+export type IconProp = string | [string, string] | { prefix?: string; iconName: string };
+
+/**
+ * Drawable geometry for an icon, for use *inside* an existing SVG.
  *
  * The radial menu draws its icons as children of one big <svg>, where Icon.svelte's
- * wrapping <span> cannot go. This pulls the geometry straight out of the registered
- * definition instead: `def.icon` is [width, height, ligatures, unicode, pathData].
+ * wrapping <span> cannot go.
+ *
+ * This replaces `getIconPath`, which returned a single `d` string because a FontAwesome
+ * icon is one filled path. A Lucide icon is a list of stroked elements over a 24 unit box,
+ * so callers must iterate and must colour via `stroke`, not `fill`.
  */
-export function getIconPath(
-  icon: IconProp | string,
-): { width: number; height: number; path: string } | null {
-  const lookup =
-    typeof icon === 'string'
-      ? { prefix: 'fas' as const, iconName: icon as any }
-      : Array.isArray(icon)
-        ? { prefix: icon[0] as any, iconName: icon[1] as any }
-        : (icon as any);
-
-  const def = findIconDefinition(lookup);
-  if (!def) return null;
-
-  const [width, height, , , path] = def.icon;
-
-  return {
-    width,
-    height,
-    // Duotone icons carry two paths; the last is the primary layer.
-    path: Array.isArray(path) ? path[path.length - 1] : path,
-  };
+export function getIconNodes(icon: IconProp | string): IconNode | null {
+  return resolveIcon(icon);
 }
 
-/** The nine FontAwesome animations LibIcon exposed. Names are unchanged. */
+/**
+ * The nine animations LibIcon exposed. Names are unchanged, and they remain part of the
+ * Lua-facing API.
+ *
+ * These used to be FontAwesome utility classes, with the keyframes supplied by
+ * `@fortawesome/fontawesome-svg-core/styles.css`. That stylesheet went with the dependency,
+ * so Icon.svelte now defines the keyframes itself.
+ */
 export type IconAnimation =
   | 'spin'
   | 'spinPulse'

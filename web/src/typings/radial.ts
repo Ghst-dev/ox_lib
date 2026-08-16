@@ -1,4 +1,4 @@
-import { IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { IconProp } from '../lib/icon';
 
 export interface RadialMenuItem {
   icon: string | IconProp;

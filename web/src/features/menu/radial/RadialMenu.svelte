@@ -2,7 +2,8 @@
   import { onDestroy } from 'svelte';
   import { onNuiEvent, fetchNui } from '../../../lib/nui';
   import { scaleFade, scaleFadeOut } from '../../../lib/transitions';
-  import { getIconPath } from '../../../lib/icon';
+  import { getIconNodes } from '../../../lib/icon';
+  import { ICON_ATTRS, ICON_VIEWBOX } from '../../../lib/icons';
   import { isIconUrl } from '../../../utils/isIconUrl';
   import { locale } from '../../../lib/stores.svelte';
   import Icon from '../../../lib/Icon.svelte';
@@ -162,7 +163,7 @@
           {@const iconH = Math.min(Math.max(item.iconHeight || 50, 0), 100)}
           {@const glyph = typeof item.icon === 'string' && isIconUrl(item.icon)
             ? null
-            : getIconPath(item.icon)}
+            : getIconNodes(item.icon)}
 
           <g
             class="sector"
@@ -180,14 +181,20 @@
             />
             <g transform="rotate({index * pieAngle - 90} {iconX} {iconY})" pointer-events="none">
               {#if glyph}
+                <!-- Same 30x30 box and offsets as before, so nothing in the sector layout
+                     shifts; only the contents changed from one filled path to a list of
+                     stroked elements over a 24 unit box. -->
                 <svg
                   x={iconX - 14.5}
                   y={iconY - 17.5}
                   width="30"
                   height="30"
-                  viewBox="0 0 {glyph.width} {glyph.height}"
+                  viewBox="0 0 {ICON_VIEWBOX} {ICON_VIEWBOX}"
+                  {...ICON_ATTRS}
                 >
-                  <path d={glyph.path} fill="currentColor" />
+                  {#each glyph as [tag, attrs], i (i)}
+                    <svelte:element this={tag} {...attrs} />
+                  {/each}
                 </svg>
               {:else}
                 <image
@@ -280,23 +287,27 @@
 
   .sector:hover {
     fill: var(--color-primary);
+    /* Flips both the label and the glyph to the dark base colour — see below. */
+    color: var(--color-bg);
     cursor: pointer;
   }
 
+  /*
+   * currentColor rather than a literal, so the hover rule above is the single place the
+   * sector's contents change colour.
+   *
+   * This replaces a pair of descendant selectors that reached in to set `fill` on the label
+   * and the icon path. That approach was fragile twice over: an earlier version of the
+   * selector also matched the wedge itself and painted the whole sector near-black, and
+   * `fill` on Lucide's stroked geometry would flood the glyph solid rather than colour it.
+   *
+   * Nothing needs to target the icon at all now. Its <svg> carries fill="none" and
+   * stroke="currentColor" as presentation attributes, which beat the fill inherited from
+   * .sector, so driving `color` is sufficient and cannot leak into the wedge.
+   */
   .sector text {
-    fill: var(--color-white);
+    fill: currentColor;
     stroke-width: 0;
-  }
-
-  /* On hover the wedge turns accent, so its contents flip to the dark base colour to stay
-     legible.
-
-     These must stay scoped to the inner group. A bare `.sector:hover path` also matches
-     the wedge itself — which is a direct child — so the sector painted itself near-black
-     instead of cyan and swallowed its own icon. */
-  .sector:hover > g > text,
-  .sector:hover > g > svg > path {
-    fill: var(--color-bg);
   }
 
   /*

@@ -1,18 +1,13 @@
 import { mount } from 'svelte';
-import { library } from '@fortawesome/fontawesome-svg-core';
-import { fas } from '@fortawesome/free-solid-svg-icons';
-import { far } from '@fortawesome/free-regular-svg-icons';
-import { fab } from '@fortawesome/free-brands-svg-icons';
-// Supplies the fa-spin / fa-beat / fa-shake keyframes that iconAnimation relies on. The
-// React binding used to inject this itself; with core-only rendering it is imported.
-import '@fortawesome/fontawesome-svg-core/styles.css';
 import App from './App.svelte';
 import { isEnvBrowser } from './lib/nui';
 import './app.css';
 
-// All three packs, as the React build did. Consumers pass bare icon names from Lua
-// ("car", "circle-check"), which only resolve if the whole library is registered.
-library.add(fas, far, fab);
+// No icon library registration. FontAwesome needed all three packs loaded up front because
+// names arrive from Lua at runtime and could be anything; that cost 27 MB in node_modules
+// and dominated a 1.81 MB bundle. lib/icons.ts is an explicit map of the names actually
+// used instead, so each icon is a static import and the bundler keeps only those.
+// The iconAnimation keyframes moved to lib/Icon.svelte with FontAwesome's stylesheet gone.
 
 // Give the browser a visible backdrop -- NUI pages are transparent by design, which makes
 // them invisible against a white page during `pnpm dev`.
