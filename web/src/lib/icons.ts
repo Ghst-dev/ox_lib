@@ -302,6 +302,59 @@ const STYLE_TOKENS = new Set([
 ]);
 
 /**
+ * Sizing, animation and layout classes that are never the icon's name.
+ *
+ * ox_target's icon API is a class string rather than a name, so a consumer can legitimately
+ * write `'fa-solid fa-car fa-2x'`. Without this the trailing modifier would be taken for
+ * the icon.
+ */
+const MODIFIER_TOKENS = new Set([
+  'fa-fw',
+  'fa-2xs',
+  'fa-xs',
+  'fa-sm',
+  'fa-lg',
+  'fa-xl',
+  'fa-2xl',
+  'fa-1x',
+  'fa-2x',
+  'fa-3x',
+  'fa-4x',
+  'fa-5x',
+  'fa-6x',
+  'fa-7x',
+  'fa-8x',
+  'fa-9x',
+  'fa-10x',
+  'fa-spin',
+  'fa-spin-pulse',
+  'fa-spin-reverse',
+  'fa-pulse',
+  'fa-beat',
+  'fa-fade',
+  'fa-beat-fade',
+  'fa-bounce',
+  'fa-shake',
+  'fa-flip',
+  'fa-flip-horizontal',
+  'fa-flip-vertical',
+  'fa-flip-both',
+  'fa-rotate-90',
+  'fa-rotate-180',
+  'fa-rotate-270',
+  'fa-rotate-by',
+  'fa-border',
+  'fa-inverse',
+  'fa-stack',
+  'fa-stack-1x',
+  'fa-stack-2x',
+  'fa-ul',
+  'fa-li',
+  'fa-pull-left',
+  'fa-pull-right',
+]);
+
+/**
  * Reduce any of the accepted shapes to a bare kebab-case name.
  *
  * Accepts the four string forms above, the `{ prefix, iconName }` table ox_lib documents,
@@ -321,12 +374,14 @@ export function normaliseIconName(value: unknown): string | null {
 
   if (typeof value !== 'string') return null;
 
-  const token = value
+  // First surviving token, not the last. A class string puts modifiers after the name
+  // ('fa-solid fa-car fa-2x'), so taking the last would pick up the modifier on anything
+  // that carries one.
+  const [token] = value
     .trim()
     .toLowerCase()
     .split(/\s+/)
-    .filter((part) => part && !STYLE_TOKENS.has(part))
-    .pop();
+    .filter((part) => part && !STYLE_TOKENS.has(part) && !MODIFIER_TOKENS.has(part));
 
   if (!token) return null;
 
