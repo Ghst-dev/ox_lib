@@ -18,7 +18,13 @@
    */
 
   const PAGE_ITEMS = 6;
-  const SIZE = 350 * 1.1025;
+
+  /**
+   * The viewBox is a fixed 350 unit square and every coordinate below is in those units.
+   * On-screen size is CSS only (`--radial-size`), so the wheel can be resized without
+   * touching a single number in the geometry.
+   */
+  const VIEWBOX = 350;
 
   const degToRad = (deg: number) => deg * (Math.PI / 180);
 
@@ -137,7 +143,7 @@
 <div class="wrapper" oncontextmenu={onContextMenu} role="none">
   {#if visible}
     <div class="stage" in:scaleFade out:scaleFadeOut>
-      <svg width="{SIZE}px" height="{SIZE}px" viewBox="0 0 350 350" transform="rotate(90)">
+      <svg width={VIEWBOX} height={VIEWBOX} viewBox="0 0 350 350" transform="rotate(90)">
         <g transform="translate(175, 175)">
           <circle r="175" class="backdrop" />
         </g>
@@ -219,9 +225,13 @@
         </g>
       </svg>
 
-      <!-- Outside the rotated svg so the glyph stays upright. -->
+      <!-- Outside the rotated svg so the glyph stays upright. Sized as a fraction of the
+           wheel (28 of 350 viewBox units) so it tracks --radial-size. -->
       <div class="centre-icon">
-        <Icon icon={!sub && page < 2 ? 'xmark' : 'arrow-rotate-left'} size="28px" />
+        <Icon
+          icon={!sub && page < 2 ? 'xmark' : 'arrow-rotate-left'}
+          size="calc(var(--radial-size) * 0.08)"
+        />
       </div>
     </div>
   {/if}
@@ -238,9 +248,23 @@
   .stage {
     position: relative;
     pointer-events: auto;
+
+    /*
+     * On-screen diameter. The only size knob -- the svg, the centre glyph and everything
+     * derived from the viewBox scale off this one value.
+     *
+     * Was a hardcoded 386px, which is a large object to drop over the middle of the
+     * screen and was fixed regardless of resolution. Viewport-relative with a floor and a
+     * ceiling instead: ~280px at 1080p, and it will not shrink to unreadable on a short
+     * window or balloon on a tall one.
+     */
+    --radial-size: clamp(220px, 26vh, 300px);
   }
 
   svg {
+    display: block;
+    width: var(--radial-size);
+    height: var(--radial-size);
     overflow: visible;
   }
 
@@ -275,26 +299,47 @@
     fill: var(--color-bg);
   }
 
+  /*
+   * Both fills are literals with no var() and no color-mix(), and that is deliberate.
+   *
+   * `fill` is an inherited SVG property whose initial value is black. Any failure to
+   * resolve — an undefined custom property, a color function the runtime does not
+   * support — invalidates the declaration and the circle falls back to black. The centre
+   * glyph is painted --color-bg, i.e. near-black by design, so the moment that happens
+   * the button turns into a black disc with an invisible icon rather than showing
+   * anything obviously broken. It has failed that way twice: once on --color-accent-deep,
+   * a token left over from the palette that preceded the Ghostbase port.
+   *
+   * These are --color-primary (#22d3ee) and the same hue lightened, resolved ahead of
+   * time. Keep them in step with the palette by hand; the failure mode is worse than the
+   * duplication.
+   */
   .centre {
-    fill: var(--color-primary);
+    fill: #22d3ee;
     stroke: var(--color-surface);
     stroke-width: 4;
   }
-  /* A lighter primary, matching the React build's shade-1 hover. Not --color-action:
-     under the accent rule that is reserved for live events, and a hover is idle chrome.
 
-     This referenced --color-accent-deep, a token from the palette that preceded the
-     Ghostbase port. An unresolvable var() makes `fill` compute to its inherited value —
-     black — so the button went dark on hover instead of brightening. */
   .centre:hover {
     cursor: pointer;
-    fill: color-mix(in srgb, var(--color-primary) 78%, white);
+    fill: #67e8f9;
   }
 
+  /*
+   * grid + place-items, not a bare block.
+   *
+   * As a block this establishes an inline formatting context, so its height came from the
+   * line box — the 24px line-height plus baseline alignment of the inline-flex icon —
+   * giving a 34px box around a 28px glyph. translate(-50%, -50%) then centred the box,
+   * leaving the glyph sitting 3px above the circle it is supposed to sit inside. A grid
+   * container has no line box, so the wrapper hugs the glyph exactly.
+   */
   .centre-icon {
     position: absolute;
     top: 50%;
     left: 50%;
+    display: grid;
+    place-items: center;
     transform: translate(-50%, -50%);
     pointer-events: none;
     color: var(--color-bg);
