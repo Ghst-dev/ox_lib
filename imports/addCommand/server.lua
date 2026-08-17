@@ -21,13 +21,35 @@
 local registeredCommands = {}
 local shouldSendCommands = false
 
+--- GHST ADDITION -- not upstream. Expect a conflict here when rebasing on ox_lib.
+---
+--- The parameter list as it was *declared*, alongside the chat suggestion built from it.
+---
+--- `buildSuggestion` is lossy on purpose: it exists to feed a chat autocomplete, so it
+--- rewrites every parameter as `{ name, help }`, folds the type into the help text as a
+--- `(type: number)` suffix, and drops `optional` entirely. That is fine for a chat box and
+--- useless for anything building a form -- ghst_admin's palette turns these declarations into
+--- input fields, and it needs the real type to know which field to draw and the real
+--- `optional` to know which ones it may leave empty. Recovering the type by parsing the
+--- suffix back out works; `optional` is simply gone and no amount of parsing brings it back.
+---
+--- Deliberately a separate event rather than extra keys on `chat:addSuggestions`. That
+--- payload is a contract other chat resources read, and this one has exactly one consumer.
+---
+--- The deprecated `lib.__addCommand` path is not covered: its parameters arrive as
+--- `'name:?type'` strings rather than a table, and nothing on this server uses it.
+---@type { name: string, help: string?, params: OxCommandParams[]? }[]
+local declaredCommands = {}
+
 SetTimeout(1000, function()
     shouldSendCommands = true
     TriggerClientEvent('chat:addSuggestions', -1, registeredCommands)
+    TriggerClientEvent('ox_lib:commandProperties', -1, declaredCommands)
 end)
 
 AddEventHandler('playerJoining', function()
     TriggerClientEvent('chat:addSuggestions', source, registeredCommands)
+    TriggerClientEvent('ox_lib:commandProperties', source, declaredCommands)
 end)
 
 ---@param source number
@@ -167,7 +189,21 @@ function lib.addCommand(commandName, properties, cb, ...)
             local suggestion = buildSuggestion(commandName, properties)
             registeredCommands[totalCommands] = suggestion
 
-            if shouldSendCommands then TriggerClientEvent('chat:addSuggestions', -1, suggestion) end
+            -- GHST ADDITION -- see declaredCommands above.
+            local declared = {
+                name = commandName,
+                help = properties.help,
+                params = properties.params,
+            }
+            declaredCommands[totalCommands] = declared
+
+            if shouldSendCommands then
+                TriggerClientEvent('chat:addSuggestions', -1, suggestion)
+                -- Wrapped in a table so the late-registration payload is the same shape as
+                -- the boot one. ox_lib sends a bare object on `chat:addSuggestions` here and
+                -- every consumer has to special-case it; there is no reason to repeat that.
+                TriggerClientEvent('ox_lib:commandProperties', -1, { declared })
+            end
         end
     end
 end
