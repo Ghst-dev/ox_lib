@@ -12,12 +12,32 @@
 
   let open = $state(false);
 
+  /**
+   * Keep the drawer open after firing something.
+   *
+   * Off by default, and that default is the whole point. The drawer is docked top-left and
+   * so is the list menu — firing it from here covered it completely, so the one feature you
+   * could not review in the harness was the one the harness was mostly used for. Closing on
+   * fire means a click shows you the thing you asked for; the launcher brings the drawer
+   * straight back.
+   *
+   * Pinning it is still wanted for the payloads that stack rather than replace, where the
+   * point is to fire several in a row and watch them queue up.
+   */
+  let pinned = $state(false);
+
+  function run(action: () => void): void {
+    action();
+    if (!pinned) open = false;
+  }
+
   const GROUPS: { label: string; actions: [string, () => void][] }[] = [
     {
       label: 'Dialogs',
       actions: [
         ['Input dialog', debug.debugInput],
         ['Alert dialog', debug.debugAlert],
+        ['Alert, no cancel', debug.debugAlertBare],
       ],
     },
     {
@@ -25,6 +45,9 @@
       actions: [
         ['Context menu', debug.debugContext],
         ['List menu', debug.debugMenu],
+        ['List menu, 40 items', debug.debugMenuLong],
+        ['List menu, empty', debug.debugMenuEmpty],
+        ['Context, empty', debug.debugContextEmpty],
         ['Radial menu', debug.debugRadial],
       ],
     },
@@ -32,10 +55,28 @@
       label: 'Feedback',
       actions: [
         ['Notifications', debug.debugNotification],
+        ['Notification shapes', debug.debugNotificationShapes],
+        ['All eight positions', debug.debugNotificationPositions],
         ['Progress bar', debug.debugProgressbar],
         ['Progress circle', debug.debugCircleProgressbar],
         ['Text UI', debug.debugTextUI],
+        ['Text UI, next position', debug.debugTextUIPositions],
         ['Skill check', debug.debugSkillCheck],
+        ['Skill check, slow', debug.debugSkillCheckSlow],
+      ],
+    },
+    {
+      // Lua interrupting the player, which is a different path from the player dismissing
+      // the same thing — and the path with no button of its own to click.
+      label: 'Closed by Lua',
+      actions: [
+        ['Close menu', debug.debugCloseMenu],
+        ['Hide context', debug.debugHideContext],
+        ['Close alert', debug.debugCloseAlert],
+        ['Close input', debug.debugCloseInput],
+        ['Cancel progress', debug.debugProgressCancel],
+        ['Cancel skill check', debug.debugSkillCheckCancel],
+        ['Hide text UI', debug.debugTextUIHide],
       ],
     },
   ];
@@ -48,10 +89,15 @@
 {#if open}
   <aside class="drawer" in:scaleFade out:scaleFadeOut>
     <h2 class="heading">Developer drawer</h2>
+    <label class="pin">
+      <input type="checkbox" bind:checked={pinned} />
+      Keep open after firing
+    </label>
+
     {#each GROUPS as group}
       <p class="group-label">{group.label}</p>
-      {#each group.actions as [label, run]}
-        <button class="action" onclick={run}>{label}</button>
+      {#each group.actions as [label, action]}
+        <button class="action" onclick={() => run(action)}>{label}</button>
       {/each}
     {/each}
     <p class="note">Browser only — never mounted in game.</p>
@@ -123,6 +169,14 @@
   .action:hover {
     opacity: 0.88;
     transform: translateY(-1px);
+  }
+
+  .pin {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--text-meta);
+    color: var(--color-dim);
   }
 
   .note {

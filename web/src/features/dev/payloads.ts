@@ -196,3 +196,153 @@ export const debugTextUI = () =>
 
 export const debugSkillCheck = () =>
   fire('startSkillCheck', { difficulty: ['easy', 'easy', 'hard'], inputs: ['W', 'A', 'S', 'D'] });
+
+/*
+ * ---------------------------------------------------------------------------------------
+ * Variants.
+ *
+ * One payload per feature proves the feature renders. It does not prove the *option* set
+ * renders, and the options are where the surprises are: eight notification positions that
+ * have to stack independently, a dialog with no cancel button, a menu with more items than
+ * fit. Each of these is a state a resource can legitimately ask for and none of them was
+ * reachable without editing this file.
+ * ---------------------------------------------------------------------------------------
+ */
+
+/**
+ * A skill check slow enough to look at.
+ *
+ * The named difficulties give a window of well under a second, so the ring has come and
+ * gone before you can judge whether it looked right — the only way to review the component
+ * was to fail it repeatedly. A custom difficulty is part of the public API
+ * (`GameDifficulty` accepts `{areaSize, speedMultiplier}`), so this is a supported payload
+ * rather than a harness trick.
+ */
+export const debugSkillCheckSlow = () =>
+  fire('startSkillCheck', {
+    difficulty: [
+      { areaSize: 80, speedMultiplier: 0.15 },
+      { areaSize: 60, speedMultiplier: 0.2 },
+    ],
+    inputs: ['W', 'A'],
+  });
+
+/** Every position at once. Eight stacks that must not merge into one. */
+export const debugNotificationPositions = () => {
+  const positions = [
+    'top-left',
+    'top',
+    'top-right',
+    'center-left',
+    'center-right',
+    'bottom-left',
+    'bottom',
+    'bottom-right',
+  ] as const;
+
+  positions.forEach((position, index) =>
+    fire('notify', {
+      title: position,
+      description: 'Position check',
+      type: index % 2 ? 'inform' : 'warning',
+      position,
+      duration: 10000,
+    }),
+  );
+};
+
+/**
+ * The two types the single payload above never sent, plus the two shapes that break layout.
+ *
+ * A notification with no description is a different box from one with a description, and a
+ * description long enough to wrap is where a fixed height shows up as clipped text.
+ */
+export const debugNotificationShapes = () => {
+  fire('notify', { title: 'Inform', description: 'Something happened', type: 'inform' });
+  fire('notify', { title: 'Warning', description: 'Something is wrong', type: 'warning' });
+  fire('notify', { title: 'Title only, no description', type: 'success' });
+  fire('notify', {
+    description: 'Description only, no title — the icon has nothing to align to.',
+    type: 'error',
+  });
+  fire('notify', {
+    title: 'Long',
+    description:
+      'A description long enough to wrap onto several lines, which is what a script that ' +
+      'reports why something failed will actually send. Anything that clips instead of ' +
+      'growing shows up here and nowhere else.',
+    type: 'inform',
+    duration: 12000,
+  });
+};
+
+/** No cancel button, and small. `cancel: false` is the default and so the untested path. */
+export const debugAlertBare = () =>
+  fire('sendAlert', {
+    header: 'Confirm only',
+    content: 'One button. Escape must still close it.',
+    size: 'xs',
+  });
+
+/** The four TextUI positions, one after another — they replace rather than stack. */
+export const debugTextUIPositions = (() => {
+  const positions = ['right-center', 'left-center', 'top-center', 'bottom-center'] as const;
+  let next = 0;
+
+  return () => {
+    const position = positions[next];
+    next = (next + 1) % positions.length;
+    // No icon on two of them: the text has to centre itself rather than sit in a column
+    // that is only there when an icon is.
+    fire('textUi', {
+      text: `Position: ${position}`,
+      position,
+      icon: next % 2 ? 'door-open' : undefined,
+    });
+  };
+})();
+
+export const debugTextUIHide = () => fire('textUiHide', {});
+
+/**
+ * A menu with far more items than fit.
+ *
+ * ox_lib's list menu scrolls and keeps the selection centred; with eleven items it never
+ * has to, so the scroll path only runs in game.
+ */
+export const debugMenuLong = () =>
+  fire('setMenu', {
+    title: 'Long menu',
+    items: Array.from({ length: 40 }, (_, index) => ({
+      label: `Item ${index + 1}`,
+      description: index % 4 === 0 ? 'Every fourth one has a description' : undefined,
+      icon: index % 3 === 0 ? 'tag' : undefined,
+    })),
+  });
+
+/**
+ * A menu with no items.
+ *
+ * Reachable in play: a resource filters its own list and can filter it to nothing. Today
+ * this draws an empty box the height of the header, which looks like a failure — worth
+ * being able to see rather than worth hiding.
+ */
+export const debugMenuEmpty = () => fire('setMenu', { title: 'Nothing here', items: [] });
+
+export const debugContextEmpty = () => fire('showContext', { title: 'Nothing here', options: [] });
+
+/*
+ * The close and cancel channels.
+ *
+ * Every one of these is Lua interrupting something the player is in the middle of — a
+ * progress bar cancelled because the item was taken away, a menu closed because the shop
+ * shut. They are a different code path from the player dismissing the same thing himself,
+ * they run at a moment the UI did not choose, and none of them could be triggered from a
+ * browser before now.
+ */
+export const debugCloseMenu = () => fire('closeMenu', {});
+export const debugHideContext = () => fire('hideContext', {});
+export const debugCloseAlert = () => fire('closeAlertDialog', {});
+export const debugCloseInput = () => fire('closeInputDialog', {});
+export const debugProgressCancel = () => fire('progressCancel', {});
+export const debugSkillCheckCancel = () => fire('skillCheckCancel', {});
