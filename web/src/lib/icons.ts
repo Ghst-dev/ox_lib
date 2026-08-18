@@ -205,6 +205,7 @@ const ICONS: Record<string, IconNode> = {
   'ear-deaf': EarOff,
   'exclamation-triangle': TriangleAlert,
   'eye-slash': EyeOff,
+  'gas-pump': Fuel,
   glasses: Glasses,
   globe: Globe,
   handcuffs: Link,
