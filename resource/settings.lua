@@ -22,7 +22,15 @@ end
 
 local settings = {
     default_locale = GetConvar('ox:locale', 'en'),
-    notification_position = safeGetKvp(GetResourceKvpString, 'notification_position', 'top-right'),
+    -- ghst: top-centre rather than upstream's top-right. The right edge is where ghst_hud draws
+    -- the money and carry-weight readout, and a notification stack landing on top of it hid the
+    -- one element that moves when a notification is worth reading. `'top'` is the value, not
+    -- `'top-center'` -- the Lua alias has no such member and the page maps `top` to the
+    -- top-center class itself (web/src/features/notifications/Notifications.svelte:80).
+    --
+    -- This is the *default* only. A player who has saved a position through `/ox_lib` has a KVP
+    -- that wins over it, which is the point of the setting existing.
+    notification_position = safeGetKvp(GetResourceKvpString, 'notification_position', 'top'),
     notification_audio = safeGetKvp(GetResourceKvpInt, 'notification_audio') == 1
 }
 
