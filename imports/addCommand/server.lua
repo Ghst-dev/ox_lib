@@ -52,6 +52,49 @@ AddEventHandler('playerJoining', function()
     TriggerClientEvent('ox_lib:commandProperties', source, declaredCommands)
 end)
 
+--- GHST ADDITION -- not upstream. Expect a conflict here when rebasing on ox_lib.
+---
+--- Let a client *ask* for the command lists instead of only ever being pushed them.
+---
+--- Upstream sends them at exactly two moments: once a second after the registering resource
+--- starts, and once per `playerJoining`. Both are fire-and-forget, and both miss:
+---
+---   * The boot broadcast goes to `-1` one second after the resource starts, which during server
+---     startup is nobody -- there are no clients connected yet.
+---   * `playerJoining` fires while the player is still connecting, before their client-side
+---     resources have started, so the handler that would catch it does not exist yet.
+---   * Nothing re-sends when a *consumer* restarts. `sync.sh -e` restarts ghst_admin on every file
+---     save, and its client comes back with an empty parameter table and no way to refill it.
+---
+--- The symptom was a palette that ran commands with no arguments: with no declared params, every
+--- row looked like a command that takes none, so `/time` ran bare and Renewed-Weathersync rejected
+--- it with "received an invalid number for argument 1 (hour), received 'nil'".
+---
+--- This module is loaded per consuming resource -- ox_lib's loader `load()`s the chunk into
+--- whichever resource indexed `lib.addCommand`, so `declaredCommands` above holds only *that*
+--- resource's commands. Every consumer therefore registers this handler and every consumer answers
+--- with its own slice, which is what makes one request from one client rebuild the whole list.
+local nextRequest = {}
+
+RegisterNetEvent('ox_lib:requestCommandProperties', function()
+    local src = source
+
+    -- Nothing registered here, nothing to say. Most resources that pull in ox_lib never call
+    -- addCommand at all, and a reply carrying two empty tables is still a round trip per resource
+    -- per request.
+    if #registeredCommands == 0 then return end
+
+    -- Per-source floor. The reply is a broadcast of every command this resource registered, and
+    -- the event is reachable by any client -- so without this it is an amplification primitive:
+    -- one cheap trigger per client, answered by every addCommand consumer on the server.
+    local now = GetGameTimer()
+    if (nextRequest[src] or 0) > now then return end
+    nextRequest[src] = now + 5000
+
+    TriggerClientEvent('chat:addSuggestions', src, registeredCommands)
+    TriggerClientEvent('ox_lib:commandProperties', src, declaredCommands)
+end)
+
 ---@param source number
 ---@param args table
 ---@param raw string
