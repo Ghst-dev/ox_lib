@@ -7,10 +7,16 @@
  * build time. FontAwesome handled that by registering all three packs — 27 MB in
  * node_modules, and the reason the built bundle was 1.81 MB.
  *
- * Only 83 distinct names are used across the entire server, so this is an explicit
+ * Around a hundred distinct names are used across the entire server, so this is an explicit
  * allowlist instead: every icon is a static import, the bundler drops the other ~1700, and
  * a name nothing sends costs nothing. The trade is that adding an icon is a line in this
- * file rather than something that just works.
+ * file rather than something that just works -- and that a name which is missing renders
+ * *nothing* in a production build, silently, because `resolveIcon` returns null.
+ *
+ * So check the name is here when adding a caller. Two rounds have already slipped through:
+ * the `success` notification's default `circle-check`, and ghst_hud's money and needs
+ * toasts. The latter write their name as `icon = cond and 'a' or 'b'`, which a grep for
+ * `icon = '...'` does not match -- sweep for quoted strings on any line assigning `icon`.
  *
  * ## Why normalisation exists
  *
@@ -49,6 +55,8 @@ import Archive from 'lucide/dist/esm/icons/archive.mjs';
 import Armchair from 'lucide/dist/esm/icons/armchair.mjs';
 import Baby from 'lucide/dist/esm/icons/baby.mjs';
 import Bandage from 'lucide/dist/esm/icons/bandage.mjs';
+import Banknote from 'lucide/dist/esm/icons/banknote.mjs';
+import BatteryCharging from 'lucide/dist/esm/icons/battery-charging.mjs';
 import Bell from 'lucide/dist/esm/icons/bell.mjs';
 import Book from 'lucide/dist/esm/icons/book.mjs';
 import BookUser from 'lucide/dist/esm/icons/book-user.mjs';
@@ -69,6 +77,7 @@ import ChevronUp from 'lucide/dist/esm/icons/chevron-up.mjs';
 import Cigarette from 'lucide/dist/esm/icons/cigarette.mjs';
 import Circle from 'lucide/dist/esm/icons/circle.mjs';
 import CircleAlert from 'lucide/dist/esm/icons/circle-alert.mjs';
+import CircleCheck from 'lucide/dist/esm/icons/circle-check.mjs';
 import CircleChevronLeft from 'lucide/dist/esm/icons/circle-chevron-left.mjs';
 // Aliased: the export is CircleHelp, the file is circle-question-mark.mjs. Lucide keeps
 // renamed icons reachable under their old export names, so an export name is not a
@@ -77,11 +86,14 @@ import CircleHelp from 'lucide/dist/esm/icons/circle-question-mark.mjs';
 import CircleUser from 'lucide/dist/esm/icons/circle-user.mjs';
 import CircleX from 'lucide/dist/esm/icons/circle-x.mjs';
 import Cloud from 'lucide/dist/esm/icons/cloud.mjs';
+import CloudUpload from 'lucide/dist/esm/icons/cloud-upload.mjs';
 import Cpu from 'lucide/dist/esm/icons/cpu.mjs';
 import DoorOpen from 'lucide/dist/esm/icons/door-open.mjs';
 import Drama from 'lucide/dist/esm/icons/drama.mjs';
+import Droplet from 'lucide/dist/esm/icons/droplet.mjs';
 import EarOff from 'lucide/dist/esm/icons/ear-off.mjs';
 import Ellipsis from 'lucide/dist/esm/icons/ellipsis.mjs';
+import Eye from 'lucide/dist/esm/icons/eye.mjs';
 import EyeOff from 'lucide/dist/esm/icons/eye-off.mjs';
 import Fence from 'lucide/dist/esm/icons/fence.mjs';
 import Footprints from 'lucide/dist/esm/icons/footprints.mjs';
@@ -97,6 +109,7 @@ import IdCard from 'lucide/dist/esm/icons/id-card.mjs';
 import Inbox from 'lucide/dist/esm/icons/inbox.mjs';
 import Info from 'lucide/dist/esm/icons/info.mjs';
 import Key from 'lucide/dist/esm/icons/key.mjs';
+import Landmark from 'lucide/dist/esm/icons/landmark.mjs';
 import Lightbulb from 'lucide/dist/esm/icons/lightbulb.mjs';
 import Link from 'lucide/dist/esm/icons/link.mjs';
 import List from 'lucide/dist/esm/icons/list.mjs';
@@ -138,10 +151,12 @@ import UserLock from 'lucide/dist/esm/icons/user-lock.mjs';
 import UserPen from 'lucide/dist/esm/icons/user-pen.mjs';
 import Users from 'lucide/dist/esm/icons/users.mjs';
 import UserShield from 'lucide/dist/esm/icons/user-shield.mjs';
+import Utensils from 'lucide/dist/esm/icons/utensils.mjs';
 import VenetianMask from 'lucide/dist/esm/icons/venetian-mask.mjs';
 import Warehouse from 'lucide/dist/esm/icons/warehouse.mjs';
 import Wrench from 'lucide/dist/esm/icons/wrench.mjs';
 import X from 'lucide/dist/esm/icons/x.mjs';
+import Zap from 'lucide/dist/esm/icons/zap.mjs';
 
 /**
  * A Lucide icon is a list of SVG elements, not a single path.
@@ -177,16 +192,19 @@ const ICONS: Record<string, IconNode> = {
   bag: ShoppingBag,
   bandage: Bandage,
   bell: Bell,
+  bolt: Zap,
   bong: Cigarette,
   book: Book,
   'box-archive': Archive,
   'box-open': PackageOpen,
   briefcase: Briefcase,
+  'building-columns': Landmark,
   calculator: Calculator,
   'calendar-days': CalendarDays,
   campground: Tent,
   cannabis: Cannabis,
   car: Car,
+  'car-battery': BatteryCharging,
   'car-burst': RotateCcw,
   'car-rear': CarFront,
   'car-side': Car,
@@ -194,16 +212,20 @@ const ICONS: Record<string, IconNode> = {
   chair: Armchair,
   child: Baby,
   circle: Circle,
+  'circle-check': CircleCheck,
   'circle-chevron-left': CircleChevronLeft,
   'circle-exclamation': CircleAlert,
   'circle-info': Info,
   'circle-user': CircleUser,
   'circle-xmark': CircleX,
   cloud: Cloud,
+  'cloud-arrow-up': CloudUpload,
   cube: Box,
+  droplet: Droplet,
   dumpster: Trash2,
   'ear-deaf': EarOff,
   'exclamation-triangle': TriangleAlert,
+  eye: Eye,
   'eye-slash': EyeOff,
   'gas-pump': Fuel,
   glasses: Glasses,
@@ -223,6 +245,7 @@ const ICONS: Record<string, IconNode> = {
   'masks-theater': Drama,
   message: MessageSquare,
   mitten: Hand,
+  'money-bill': Banknote,
   pen: Pen,
   play: Play,
   plus: Plus,
@@ -252,6 +275,7 @@ const ICONS: Record<string, IconNode> = {
   'user-pen': UserPen,
   'user-shield': UserShield,
   'user-tie': Briefcase,
+  utensils: Utensils,
   vest: Shirt,
   warehouse: Warehouse,
   wrench: Wrench,
