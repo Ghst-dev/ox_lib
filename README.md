@@ -14,7 +14,19 @@ A comprehensive FiveM development library that streamlines resource creation thr
 For guidelines to contributing to the project, and to see our Contributor License Agreement, see [CONTRIBUTING.md](./CONTRIBUTING.md)\
 For additional legal notices, refer to [NOTICE.md](./NOTICE.md).
 
+**This is a fork.** Everything below is upstream's; what differs is in [docs/](docs/).
+
 </div>
+
+## 🧩 This fork
+
+Forked for the Ghst-dev server. The Lua library is upstream's — every import, module and
+export — so upstream's documentation still applies. Almost all of what differs is the NUI,
+rebuilt in Svelte.
+
+| | |
+|---|---|
+| [docs/changes.md](docs/changes.md) | What differs from upstream, and why |
 
 ## 📚 Documentation
 
