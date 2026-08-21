@@ -68,10 +68,14 @@
     position: relative;
     width: 350px;
     height: 45px;
+    /* Ambient tier: this is drawn over live gameplay, never over a dimmed scene. See the
+       ambient block in theme/tokens.css -- a white edge so it does not vanish into a night
+       sky, and a 10px shadow so it does not smear across daylight concrete. The inset glass
+       highlight goes with the focused tier; the white border already does that lifting. */
     border-radius: var(--radius-md);
-    background: var(--surface-panel);
-    border: 1px solid var(--color-border);
-    box-shadow: inset 0 1px 0 var(--edge-highlight), var(--shadow-panel);
+    background: var(--surface-ambient);
+    border: 1px solid var(--border-ambient);
+    box-shadow: var(--shadow-ambient);
     overflow: hidden;
   }
 
@@ -88,7 +92,7 @@
     position: absolute;
     inset: 0;
     width: 0;
-    background: color-mix(in srgb, var(--color-action) 26%, var(--surface-panel));
+    background: color-mix(in srgb, var(--color-action) 26%, var(--surface-ambient));
     border-right: 2px solid var(--color-action);
     box-shadow: 0 0 8px var(--action-glow);
     overflow: hidden;
